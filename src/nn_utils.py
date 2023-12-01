@@ -67,17 +67,17 @@ class Net(nn.Module):
         self.conv5 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, padding=1)
         self.batchNorm5 = nn.BatchNorm2d(256)
 
-        self.conv6 = nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, padding=1)
-        self.batchNorm6 = nn.BatchNorm2d(512)
+        self.conv6 = nn.Conv2d(in_channels=256, out_channels=64, kernel_size=3, padding=1)
+        self.batchNorm6 = nn.BatchNorm2d(64)
 
         # residual block start
-        self.conv7 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, padding=1)
-        self.batchNorm7 = nn.BatchNorm2d(512)
-        self.conv8 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, padding=1)
-        self.batchNorm8 = nn.BatchNorm2d(512)
+        self.conv7 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1)
+        self.batchNorm7 = nn.BatchNorm2d(64)
+        self.conv8 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1)
+        self.batchNorm8 = nn.BatchNorm2d(64)
         # residual block end        
         
-        self.out = nn.Linear(512, 10)
+        self.out = nn.Linear(64, 10)
     
     def forward(self, x):
         # first block
@@ -142,11 +142,11 @@ def train_nn(net: nn.Module, epochs: int, optimizer: torch.optim.Optimizer):
     print(f'- Loss function: {F.cross_entropy.__name__}')
 
     accuracy_per_epoch_track = []
-    loss_per_epoch_track = []
+    running_error_track = []
 
     # loop over the dataset multiple times
     for epoch in range(epochs):
-        running_loss = 0
+        running_error = 0
         # loop over the dataset by mini-batch
         for mini_batch in TRAINLOADER:
             images = mini_batch[0].to(DEVICE)
@@ -160,15 +160,15 @@ def train_nn(net: nn.Module, epochs: int, optimizer: torch.optim.Optimizer):
             loss.backward() # calculate gradients with respect to each weight
             optimizer.step() # update weights
             
-            running_loss += loss.item()
+            running_error += loss.item()
         
         accuracy = test_nn(net=net, verbose=False)
             
         # track
         accuracy_per_epoch_track.append(accuracy)
-        loss_per_epoch_track.append(running_loss)
+        running_error_track.append(running_error)
 
-        print(f'Epoch: {epoch} -- Loss: {loss_per_epoch_track[-1]} -- Accuracy: {accuracy_per_epoch_track[-1]}')
+        print(f'Epoch: {epoch} -- Error: {running_error_track[-1]} -- Accuracy: {accuracy_per_epoch_track[-1]}')
 
     # plot
     fig, ax1 = plt.subplots()
@@ -179,8 +179,8 @@ def train_nn(net: nn.Module, epochs: int, optimizer: torch.optim.Optimizer):
     ax1.plot(np.array(accuracy_per_epoch_track), color='b', marker='.', label='Accuracy', linestyle='dashed', linewidth=0.5)
 
     ax2 = ax1.twinx()
-    ax2.set_ylabel('Loss', color='r')
-    ax2.plot(np.array(loss_per_epoch_track), color='r', marker='.', label='Loss', linestyle='dashed', linewidth=0.5)
+    ax2.set_ylabel('Error', color='r')
+    ax2.plot(np.array(running_error_track), color='r', marker='.', label='Error', linestyle='dashed', linewidth=0.5)
 
     fig.tight_layout()
     fig.legend()
